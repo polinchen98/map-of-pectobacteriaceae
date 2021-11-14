@@ -3,11 +3,11 @@ library(leaflet)
 library(glue)
 
 # data frames with info about bacterium from family Pectobacteriaceae
-pectobacterium <- read_tsv('pectobacterium.csv')
-dickeya <- read_tsv('dickeya.csv')
-brenneria <- read_tsv('brenneria.csv')
-lonsdalea <- read_tsv('lonsdalea.csv')
-sodalis <- read_tsv('sodalis.csv')
+pectobacterium <- read_tsv('data/pectobacterium.csv')
+dickeya <- read_tsv('data/dickeya.csv')
+brenneria <- read_tsv('data/brenneria.csv')
+lonsdalea <- read_tsv('data/lonsdalea.csv')
+sodalis <- read_tsv('data/sodalis.csv')
 
 # Data frames with coordinates for each genus
 coor_pectobacterium <- pectobacterium %>% 
