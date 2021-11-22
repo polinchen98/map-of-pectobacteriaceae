@@ -1,17 +1,13 @@
-library(shiny)
 library(tidyverse)
 library(leaflet)
 library(glue)
 
-
-#processing data
-
 # data frames with info about bacterium from family Pectobacteriaceae
-pectobacterium <- read_tsv('./data/pectobacterium.csv')
-dickeya <- read_tsv('./data/dickeya.csv')
-brenneria <- read_tsv('./data/brenneria.csv')
-lonsdalea <- read_tsv('./data/lonsdalea.csv')
-sodalis <- read_tsv('./data/sodalis.csv')
+pectobacterium <- read_tsv('data/pectobacterium.csv')
+dickeya <- read_tsv('data/dickeya.csv')
+brenneria <- read_tsv('data/brenneria.csv')
+lonsdalea <- read_tsv('data/lonsdalea.csv')
+sodalis <- read_tsv('data/sodalis.csv')
 
 # Data frames with coordinates for each genus
 coor_pectobacterium <- pectobacterium %>% 
@@ -29,6 +25,18 @@ coor_lonsdalea <- lonsdalea %>%
 coor_sodalis <- sodalis %>% 
   select(genus, species, eventDate, decimalLatitude, decimalLongitude) %>% 
   drop_na()
+
+# count of species
+coor_pectobacterium %>% 
+  count(species)
+coor_dickeya %>% 
+  count(species)
+coor_brenneria %>% 
+  count(species)
+coor_lonsdalea %>% 
+  count(species)
+coor_sodalis %>% 
+  count(species)
 
 discription_pectobacterium <- tribble(
   ~species, ~img, ~NCBI,
@@ -96,6 +104,8 @@ all_genus <- bind_rows(
   coor_sodalis
 )
 
+all_genus %>% 
+  count(species) %>% View()
 
 all_genus <- all_genus %>%
   mutate(description_html = glue('<figure>
@@ -113,58 +123,11 @@ leaflet(data = all_genus) %>%
   addTiles() %>%
   addProviderTiles("Stamen.TonerHybrid") %>% 
   addCircleMarkers(lng = ~decimalLongitude, 
-                   lat = ~decimalLatitude,
-                   popup = ~description_html,
-                   clusterOptions = markerClusterOptions(all_genus$genus),
-                   color = ~pal(genus), opacity = 0.7, fillOpacity = 0.8, radius = 10) %>% 
+             lat = ~decimalLatitude,
+             popup = ~description_html,
+             clusterOptions = markerClusterOptions(all_genus$genus),
+             color = ~pal(genus), opacity = 0.7, fillOpacity = 0.8, radius = 10) %>% 
   addLegend("topright", pal = pal, values = ~genus, title='Genus')
 
-
-
-
-
-
-
-shinyServer(function(input, output, session) {
-
-  filteredData <- reactive({
-    if (input$genus == "All genus") {
-      all_genus
-    } else {
-      filter(all_genus, genus == input$genus)
-    }
-  })
   
-  output$map <- renderLeaflet({
-    leaflet(data = filteredData()) %>% 
-      addTiles() %>%
-      addProviderTiles("Stamen.TonerHybrid") %>% 
-      addCircleMarkers(lng = ~decimalLongitude, 
-                       lat = ~decimalLatitude,
-                       popup = ~description_html,
-                       clusterOptions = markerClusterOptions(),
-                       color = ~pal(genus), opacity = 0.7, fillOpacity = 0.8, radius = 10)
-  })
   
-  observe({
-    leafletProxy("map", data = filteredData()) %>%
-      clearShapes() %>%
-      addTiles() %>%
-      addProviderTiles("Stamen.TonerHybrid") %>% 
-      addCircleMarkers(lng = ~decimalLongitude, 
-                       lat = ~decimalLatitude,
-                       popup = ~description_html,
-                       clusterOptions = markerClusterOptions(),
-                       color = ~pal1(species), opacity = 0.7, fillOpacity = 0.8, radius = 10)
-  })
-  
-  output$plot <- renderEcharts4r({
-    data =filteredData() %>% 
-      count(eventDate) %>% 
-      drop_na() %>% 
-      e_charts(eventDate) %>% 
-      e_line(n, name = 'number of finds') %>% 
-      e_tooltip(trigger = "axis")
-  })
-  
-})
